@@ -3,22 +3,34 @@ package image3d
 import (
 	"image"
 	"image/color"
+	"image/draw"
 	"math"
 )
 
 type Image3D struct {
 	W, H, D int
-	Slices  []image.Image
+	Slices  []*image.NRGBA64
 }
 
-func NewImage3D(slices []image.Image) *Image3D {
-	w := slices[0].Bounds().Size().X
-	h := slices[0].Bounds().Size().Y
-	d := len(slices)
+func NewImage3D(images []image.Image) *Image3D {
+	w := images[0].Bounds().Size().X
+	h := images[0].Bounds().Size().Y
+	d := len(images)
+	slices := make([]*image.NRGBA64, len(images))
+	for i, src := range images {
+		switch src := src.(type) {
+		case *image.NRGBA64:
+			slices[i] = src
+		default:
+			dst := image.NewNRGBA64(src.Bounds())
+			draw.Draw(dst, dst.Rect, src, image.ZP, draw.Src)
+			slices[i] = dst
+		}
+	}
 	return &Image3D{w, h, d, slices}
 }
 
-func (im *Image3D) At(x, y, z float64) color.Color {
+func (im *Image3D) At(x, y, z float64) color.NRGBA64 {
 	x0 := int(math.Floor(x))
 	y0 := int(math.Floor(y))
 	z0 := int(math.Floor(z))
@@ -31,7 +43,7 @@ func (im *Image3D) At(x, y, z float64) color.Color {
 	y -= float64(y0)
 	z -= float64(z0)
 	if x == 0 && y == 0 && z == 0 {
-		return im0.At(x0, y0)
+		return im0.NRGBA64At(x0, y0)
 	}
 	X := 1 - x
 	Y := 1 - y
@@ -45,14 +57,14 @@ func (im *Image3D) At(x, y, z float64) color.Color {
 	}
 	im1 := im.Slices[z1]
 
-	c000 := im0.At(x0, y0)
-	c001 := im1.At(x0, y0)
-	c010 := im0.At(x0, y1)
-	c011 := im1.At(x0, y1)
-	c100 := im0.At(x1, y0)
-	c101 := im1.At(x1, y0)
-	c110 := im0.At(x1, y1)
-	c111 := im1.At(x1, y1)
+	c000 := im0.NRGBA64At(x0, y0)
+	c001 := im1.NRGBA64At(x0, y0)
+	c010 := im0.NRGBA64At(x0, y1)
+	c011 := im1.NRGBA64At(x0, y1)
+	c100 := im0.NRGBA64At(x1, y0)
+	c101 := im1.NRGBA64At(x1, y0)
+	c110 := im0.NRGBA64At(x1, y1)
+	c111 := im1.NRGBA64At(x1, y1)
 	r000, g000, b000, a000 := c000.RGBA()
 	r001, g001, b001, a001 := c001.RGBA()
 	r010, g010, b010, a010 := c010.RGBA()
