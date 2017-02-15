@@ -22,14 +22,29 @@ func (im *Image3D) At(x, y, z float64) color.Color {
 	x0 := int(math.Floor(x))
 	y0 := int(math.Floor(y))
 	z0 := int(math.Floor(z))
-	x1 := x0 + 1
-	y1 := y0 + 1
-	z1 := z0 + 1
-	if z0 < 0 || z1 >= im.D {
+	if z0 < 0 {
 		return color.NRGBA64{}
 	}
 	im0 := im.Slices[z0]
+
+	x -= float64(x0)
+	y -= float64(y0)
+	z -= float64(z0)
+	if x == 0 && y == 0 && z == 0 {
+		return im0.At(x0, y0)
+	}
+	X := 1 - x
+	Y := 1 - y
+	Z := 1 - z
+
+	x1 := x0 + 1
+	y1 := y0 + 1
+	z1 := z0 + 1
+	if z1 >= im.D {
+		return color.NRGBA64{}
+	}
 	im1 := im.Slices[z1]
+
 	c000 := im0.At(x0, y0)
 	c001 := im1.At(x0, y0)
 	c010 := im0.At(x0, y1)
@@ -46,12 +61,6 @@ func (im *Image3D) At(x, y, z float64) color.Color {
 	r101, g101, b101, a101 := c101.RGBA()
 	r110, g110, b110, a110 := c110.RGBA()
 	r111, g111, b111, a111 := c111.RGBA()
-	x -= float64(x0)
-	y -= float64(y0)
-	z -= float64(z0)
-	X := 1 - x
-	Y := 1 - y
-	Z := 1 - z
 	r00 := float64(r000)*X + float64(r100)*x
 	r01 := float64(r001)*X + float64(r101)*x
 	r10 := float64(r010)*X + float64(r110)*x
