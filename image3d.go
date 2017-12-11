@@ -34,7 +34,7 @@ func (im *Image3D) At(x, y, z float64) color.NRGBA64 {
 	x0 := int(math.Floor(x))
 	y0 := int(math.Floor(y))
 	z0 := int(math.Floor(z))
-	if z0 < 0 {
+	if z0 < 0 || z0 >= len(im.Slices) {
 		return color.NRGBA64{}
 	}
 	im0 := im.Slices[z0]
